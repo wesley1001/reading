@@ -5,10 +5,13 @@ import {ToastShort} from '../utils/ToastUtils';
 import {request} from '../utils/RequestUtils';
 import {WEXIN_ARTICLE_LIST} from '../constants/Urls';
 
-export function fetchArticles(isRefreshing, loading, typeId) {
+export function fetchArticles(isRefreshing, loading, typeId, isLoadMore, page) {
+	if (page == undefined) {
+		page = 1;
+	};
 	return dispatch => {
-		dispatch(fetchArticleList(isRefreshing, loading));
-		return request(WEXIN_ARTICLE_LIST + '?typeId=' + typeId, 'get')
+		dispatch(fetchArticleList(isRefreshing, loading, isLoadMore));
+		return request(WEXIN_ARTICLE_LIST + '?typeId=' + typeId + '&page=' + page, 'get')
       .then((articleList) => {
         dispatch(receiveArticleList(articleList.showapi_res_body.pagebean.contentlist, typeId));
       })
@@ -19,9 +22,13 @@ export function fetchArticles(isRefreshing, loading, typeId) {
 	}
 }
 
-function fetchArticleList(isRefreshing, loading) {
+function fetchArticleList(isRefreshing, loading, isLoadMore) {
+	if (isLoadMore == undefined) {
+		isLoadMore = false;
+	};
 	return {
-		type: types.FETCH_ARTICLE_LIST
+		type: types.FETCH_ARTICLE_LIST,
+		isLoadMore: isLoadMore
 	}
 }
 
@@ -32,15 +39,20 @@ function receiveArticleList(articleList, typeId) {
 				type: types.RECEIVE_HOT_LIST,
 				hotList: articleList
 			}
+		case 12:
+			return {
+				type: types.RECEIVE_ZAN_LIST,
+				zanList: articleList
+			}
 		case 9:
 			return {
 				type: types.RECEIVE_IT_LIST,
 				itList: articleList
 			}
-		case 18:
+		case 2:
 			return {
-				type: types.RECEIVE_CONSTELLATION_LIST,
-				constellationList: articleList
+				type: types.RECEIVE_JOKE_LIST,
+				jokeList: articleList
 			}
 		default:
 			break;

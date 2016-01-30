@@ -10,6 +10,8 @@ const {
   TouchableOpacity,
   PropTypes,
   InteractionManager,
+  ProgressBarAndroid,
+  Image,
   View
 } = React;
 import LoadingView from '../components/LoadingView';
@@ -18,11 +20,16 @@ import ReadingTabBar from '../components/ReadingTabBar';
 import ReadingToolbar from '../components/ReadingToolbar';
 import ScrollableTabView from 'react-native-scrollable-tab-view';
 import WebViewContainer from '../containers/WebViewContainer';
+import {ToastShort} from '../utils/ToastUtils';
 
 const propTypes = {
   dispatch: PropTypes.func.isRequired,
   read: PropTypes.object.isRequired
 }
+
+var canLoadMore;
+var page = 1;
+var currentTypeId;
 
 class Main extends React.Component {
   constructor(props) {
@@ -33,13 +40,44 @@ class Main extends React.Component {
       })
     };
     this.renderItem = this.renderItem.bind(this);
+    this.renderFooter = this.renderFooter.bind(this);
+    this.onScroll = this.onScroll.bind(this);
+    canLoadMore = false;
   }
 
   componentDidMount() {
     const {dispatch} = this.props;
     dispatch(fetchArticles(false, true, 0));
+    dispatch(fetchArticles(false, true, 12));
     dispatch(fetchArticles(false, true, 9));
-    dispatch(fetchArticles(false, true, 18));
+    dispatch(fetchArticles(false, true, 2));
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const {read} = this.props;
+    let isNoData;
+    if (read.isLoadMore && !nextProps.read.isLoadMore && nextProps.read.isRefreshing) {
+      switch (currentTypeId) {
+        case 0:
+          isNoData = read.hotList.length == nextProps.read.hotList.length;
+          break;
+        case 12:
+          isNoData = read.zanList.length == nextProps.read.zanList.length;
+          break;
+        case 9:
+          isNoData = read.itList.length == nextProps.read.itList.length;
+          break;
+        case 2:
+          isNoData = read.jokeList.length == nextProps.read.jokeList.length;
+          break;
+        default:
+          isNoData = false;
+          break;
+      }
+      if (isNoData) {
+        ToastShort('没有更多数据了');
+      }
+    }
   }
 
   onRefresh(typeId) {
@@ -48,11 +86,14 @@ class Main extends React.Component {
       case 0:
         dispatch(fetchArticles(true, false, 0));
         break;
+      case 12:
+        dispatch(fetchArticles(true, false, 12));
+        break;
       case 9:
         dispatch(fetchArticles(true, false, 9));
         break;
-      case 18:
-        dispatch(fetchArticles(true, false, 18));
+      case 2:
+        dispatch(fetchArticles(true, false, 2));
         break;
       default:
         break;
@@ -71,13 +112,69 @@ class Main extends React.Component {
     });
   }
 
+  onScroll() {
+    canLoadMore = true;
+  }
+
+  onEndReached(typeId) {
+    if (canLoadMore) {
+      page++;
+      currentTypeId = typeId;
+      const {dispatch} = this.props;
+      switch (typeId) {
+        case 0:
+          dispatch(fetchArticles(true, false, 0, true, page));
+          break;
+        case 12:
+          dispatch(fetchArticles(true, false, 12, true, page));
+          break;
+        case 9:
+          dispatch(fetchArticles(true, false, 9, true, page));
+          break;
+        case 2:
+          dispatch(fetchArticles(true, false, 2, true, page));
+          break;
+        default:
+          break;
+      }
+    };
+  }
+
+  renderFooter() {
+    const {read} = this.props;
+    if (read.isLoadMore) {
+      return (
+        <View style={{flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+          <ProgressBarAndroid styleAttr='Inverse' color='#3e9ce9' />
+          <Text style={{textAlign: 'center', fontSize: 16}}>
+            数据加载中……
+          </Text>
+        </View>
+      );
+    }
+  }
+
   renderItem(article, sectionID, rowID) {
     return (
       <TouchableOpacity onPress={this.onPress.bind(this, article)}>
         <View style={styles.containerItem}>
-          <Text style={styles.title}>
-            {article.title}
-          </Text>
+          <Image
+            style={{width: 88, height: 66, marginRight: 10}}
+            source={{uri: article.contentImg}}
+          />
+          <View style={{flex: 1, flexDirection: 'column'}} >
+            <Text style={styles.title}>
+              {article.title}
+            </Text>
+            <View style={{flex: 1, flexDirection: 'row'}} >
+              <Text style={{fontSize: 14, color: '#aaaaaa', marginTop: 5}}>
+                来自微信公众号：
+              </Text>
+              <Text style={{fontSize: 14, color: '#87CEFA', marginTop: 5}}>
+                {article.userName}
+              </Text>
+            </View>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -93,11 +190,13 @@ class Main extends React.Component {
       case 0:
         isEmpty = read.hotList == undefined || read.hotList.length == 0;
         break;
+      case 12:
+        isEmpty = read.zanList == undefined || read.zanList.length == 0;
       case 9:
         isEmpty = read.itList == undefined || read.itList.length == 0;
         break;
-      case 18:
-        isEmpty = read.constellationList == undefined || read.constellationList.length == 0;
+      case 2:
+        isEmpty = read.jokeList == undefined || read.jokeList.length == 0;
         break;
       default:
         break;
@@ -131,6 +230,10 @@ class Main extends React.Component {
         dataSource={dataSource}
         renderRow={this.renderItem}
         style={styles.listView}
+        onEndReached={this.onEndReached.bind(this, typeId)}
+        onEndReachedThreshold={10}
+        onScroll={this.onScroll}
+        renderFooter={this.renderFooter}
         refreshControl={
           <RefreshControl
             refreshing={read.isRefreshing}
@@ -146,8 +249,9 @@ class Main extends React.Component {
   render() {
     const {read, navigator} = this.props;
     let hotSource = this.state.dataSource.cloneWithRows(read.hotList);
+    let zanSource = this.state.dataSource.cloneWithRows(read.zanList);
     let itSource = this.state.dataSource.cloneWithRows(read.itList);
-    let constellationSource = this.state.dataSource.cloneWithRows(read.constellationList);
+    let jokeSource = this.state.dataSource.cloneWithRows(read.jokeList);
     return (
       <View style={styles.container}>
         <ReadingToolbar
@@ -159,6 +263,7 @@ class Main extends React.Component {
           tabBarBackgroundColor="#fcfcfc"
           tabBarUnderlineColor="#3e9ce9"
           tabBarActiveTextColor="#3e9ce9"
+          tabBarInactiveTextColor="#aaaaaa"
         >
           <View
             tabLabel="热门"
@@ -167,19 +272,24 @@ class Main extends React.Component {
             {this.renderContent(hotSource, 0)}
           </View>
           <View
+            tabLabel="点赞"
+            style={{flex: 1}}
+          >
+            {this.renderContent(zanSource, 12)}
+          </View>
+          <View
             tabLabel="科技"
             style={{flex: 1}}
           >
             {this.renderContent(itSource, 9)}
           </View>
           <View
-            tabLabel="星座"
+            tabLabel="段子"
             style={{flex: 1}}
           >
-            {this.renderContent(constellationSource, 18)}
+            {this.renderContent(jokeSource, 2)}
           </View>
         </ScrollableTabView>
-
       </View>
     );
   }
@@ -196,7 +306,7 @@ let styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fcfcfc',
-    padding: 15,
+    padding: 10,
     borderBottomColor: '#ddd',
     borderBottomWidth: 1
   },
@@ -204,7 +314,7 @@ let styles = StyleSheet.create({
     flex: 3,
     fontSize: 18,
     textAlign: 'left',
-    color: '#aaaaaa'
+    color: 'black'
   },
   listView: {
     backgroundColor: '#eeeeec'

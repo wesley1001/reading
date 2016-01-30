@@ -10,6 +10,8 @@ const {
 
 import ReadingToolbar from '../components/ReadingToolbar';
 import {ToastShort} from '../utils/ToastUtils';
+import LoadingView from '../components/LoadingView';
+import {getApiVersion} from 'react-native-wechat';
 
 let toolbarActions = [
   {title: '分享', show: 'always'}
@@ -22,27 +24,33 @@ class WebViewPage extends React.Component {
   }
 
   onActionSelected() {
-  	ToastShort('分享！');
+  	ToastShort('敬请期待');
+  }
+
+  renderLoading() {
+    return <LoadingView />;
   }
 
   render() {
-  	const {navigator} = this.props;
+  	const {navigator, route} = this.props;
   	return (
   		<View style={styles.container}>
         <ReadingToolbar
           actions={toolbarActions}
           onActionSelected={this.onActionSelected}
-          title={navigator.getCurrentRoutes()[1].title}
+          title={route.title}
           navigator={navigator}
         />
         <WebView
 	        automaticallyAdjustContentInsets={false}
 	        style={{flex: 1}}
-	        url={navigator.getCurrentRoutes()[1].url}
-	        javaScriptEnabled={true}
-	        domStorageEnabled={true}
+	        url={route.url}
+	        javaScriptEnabledAndroid={true}
+	        domStorageEnabledAndroid={true}
 	        startInLoadingState={true}
 	        scalesPageToFit={true}
+          onShouldStartLoadWithRequest={true}
+          renderLoading={this.renderLoading.bind(this)}
 	      />
       </View>
   	);
