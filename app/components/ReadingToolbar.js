@@ -4,9 +4,7 @@ import React from 'react-native';
 const {
 	StyleSheet,
 	PropTypes,
-	View,
-	ToolbarAndroid,
-	BackAndroid
+	ToolbarAndroid
 } = React;
 import StyleSheetPropType from 'StyleSheetPropType';
 import ViewStylePropTypes from 'ViewStylePropTypes';
@@ -20,21 +18,25 @@ const propTypes = {
 	actions: PropTypes.array,
 	navigator: PropTypes.object,
 	onActionSelected: PropTypes.func,
+	onIconClicked: PropTypes.func,
 	customView: PropTypes.object
 }
 
 class ReadingToolbar extends React.Component {
 	constructor(props) {
 		super(props);
-
 		this.onIconClicked = this.onIconClicked.bind(this);
 		this.onActionSelected = this.onActionSelected.bind(this);
 	}
 
 	onIconClicked() {
-		const {navigator} = this.props;
-		if (navigator) {
-			NaviGoBack(navigator);
+		if (this.props.onIconClicked) {
+			this.props.onIconClicked();
+		} else {
+			const {navigator} = this.props;
+			if (navigator) {
+				NaviGoBack(navigator);
+			}
 		}
 	}
 
@@ -57,7 +59,7 @@ class ReadingToolbar extends React.Component {
 					actions={this.props.actions}
 	        onActionSelected={this.onActionSelected}
 	        onIconClicked={this.onIconClicked}
-	        navIcon={NaviGoBack(navigator) ? require('../img/icon_left.png') : require('../img/R_logo.png')}
+	        navIcon={NaviGoBack(navigator) ? require('../img/icon_left.png') : require('../img/menu.png')}
 	        titleColor='#fff'
 	        title={this.props.title}
 	      />

@@ -6,12 +6,12 @@ const {
 } = React;
 import {connect} from 'react-redux';
 
-import WebViewPage from '../pages/WebViewPage';
+import Feedback from '../pages/Feedback';
 
-class WebViewContainer extends Component {
+class FeedbackContainer extends Component {
   render() {
     return (
-      <WebViewPage {...this.props} />
+      <Feedback {...this.props} />
     );
   }
 }
@@ -23,4 +23,4 @@ function mapStateToProps(state) {
   }
 }
 
-export default connect(mapStateToProps)(WebViewContainer);
+export default connect(mapStateToProps)(FeedbackContainer);

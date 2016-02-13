@@ -2,14 +2,28 @@
 
 import React from 'react-native';
 const {
-  View,
   Component
 } = React;
 import {connect} from 'react-redux';
-
+import CodePush from 'react-native-code-push';
+import AV from 'avoscloud-sdk';
 import Main from '../pages/Main';
 
 class MainContainer extends Component {
+  componentDidMount() {
+    CodePush.sync({
+      deploymentKey: "RGOUfyINiLicZnld67aD0nrbRvyLV1Ifekvul",
+      updateDialog: {
+        optionalIgnoreButtonLabel: '稍后',
+        optionalInstallButtonLabel: '后台更新',
+        optionalUpdateMessage: 'Reading有新版本了，是否更新？',
+        title: '更新提示'
+      },
+      installMode: CodePush.InstallMode.ON_NEXT_RESTART
+    });
+    AV.initialize('Tfi1z7dN9sjMwSul8sYaTEvg-gzGzoHsz', '57qmeEJonefntNqRe17dAgi4');
+  }
+
   render() {
     return (
       <Main {...this.props} />

@@ -12,6 +12,8 @@ const {
   InteractionManager,
   ProgressBarAndroid,
   Image,
+  DrawerLayoutAndroid,
+  Dimensions,
   View
 } = React;
 import LoadingView from '../components/LoadingView';
@@ -20,6 +22,8 @@ import ReadingTabBar from '../components/ReadingTabBar';
 import ReadingToolbar from '../components/ReadingToolbar';
 import ScrollableTabView from 'react-native-scrollable-tab-view';
 import WebViewContainer from '../containers/WebViewContainer';
+import AboutContainer from '../containers/AboutContainer';
+import FeedbackContainer from '../containers/FeedbackContainer';
 import {ToastShort} from '../utils/ToastUtils';
 
 const propTypes = {
@@ -27,9 +31,11 @@ const propTypes = {
   read: PropTypes.object.isRequired
 }
 
-var canLoadMore;
+var canLoadMore, currentTypeId;
 var page = 1;
-var currentTypeId;
+let typeIds = [0, 12, 9, 2];
+var loadMoreTime = 0;
+let categories = {0: "热门", 12: "点赞", 9: "科技", 2: "段子"};
 
 class Main extends React.Component {
   constructor(props) {
@@ -41,63 +47,31 @@ class Main extends React.Component {
     };
     this.renderItem = this.renderItem.bind(this);
     this.renderFooter = this.renderFooter.bind(this);
+    this.renderNavigationView = this.renderNavigationView.bind(this);
+    this.onIconClicked = this.onIconClicked.bind(this);
     this.onScroll = this.onScroll.bind(this);
     canLoadMore = false;
   }
 
   componentDidMount() {
     const {dispatch} = this.props;
-    dispatch(fetchArticles(false, true, 0));
-    dispatch(fetchArticles(false, true, 12));
-    dispatch(fetchArticles(false, true, 9));
-    dispatch(fetchArticles(false, true, 2));
+    typeIds.forEach((typeId) => {
+      dispatch(fetchArticles(false, true, typeId));
+    });
   }
 
   componentWillReceiveProps(nextProps) {
     const {read} = this.props;
-    let isNoData;
-    if (read.isLoadMore && !nextProps.read.isLoadMore && nextProps.read.isRefreshing) {
-      switch (currentTypeId) {
-        case 0:
-          isNoData = read.hotList.length == nextProps.read.hotList.length;
-          break;
-        case 12:
-          isNoData = read.zanList.length == nextProps.read.zanList.length;
-          break;
-        case 9:
-          isNoData = read.itList.length == nextProps.read.itList.length;
-          break;
-        case 2:
-          isNoData = read.jokeList.length == nextProps.read.jokeList.length;
-          break;
-        default:
-          isNoData = false;
-          break;
-      }
-      if (isNoData) {
+    if (read.isLoadMore && !nextProps.read.isLoadMore && !nextProps.read.isRefreshing) {
+      if (nextProps.read.noMore) {
         ToastShort('没有更多数据了');
-      }
+      };
     }
   }
 
   onRefresh(typeId) {
     const {dispatch} = this.props;
-    switch (typeId) {
-      case 0:
-        dispatch(fetchArticles(true, false, 0));
-        break;
-      case 12:
-        dispatch(fetchArticles(true, false, 12));
-        break;
-      case 9:
-        dispatch(fetchArticles(true, false, 9));
-        break;
-      case 2:
-        dispatch(fetchArticles(true, false, 2));
-        break;
-      default:
-        break;
-    }
+    dispatch(fetchArticles(true, false, typeId));
   }
 
   onPress(article) {
@@ -106,37 +80,55 @@ class Main extends React.Component {
       navigator.push({
         component: WebViewContainer,
         name: 'WebViewPage',
-        url: article.url,
-        title: article.userName
+        article: article
       });
     });
   }
 
+  onPressDrawerItem(index) {
+    const {navigator} = this.props;
+    this.refs.drawer.closeDrawer();
+    switch (index) {
+      case 2:
+        InteractionManager.runAfterInteractions(() => {
+          navigator.push({
+            component: FeedbackContainer,
+            name: 'Feedback'
+          });
+        });
+        break;
+      case 3:
+        InteractionManager.runAfterInteractions(() => {
+          navigator.push({
+            component: AboutContainer,
+            name: 'About'
+          });
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  onIconClicked() {
+    this.refs.drawer.openDrawer();
+  }
+
   onScroll() {
-    canLoadMore = true;
+    if (!canLoadMore) {
+      canLoadMore = true;
+    };
   }
 
   onEndReached(typeId) {
-    if (canLoadMore) {
+    let time = Date.parse(new Date()) / 1000;
+    if (canLoadMore && time - loadMoreTime > 1) {
       page++;
       currentTypeId = typeId;
       const {dispatch} = this.props;
-      switch (typeId) {
-        case 0:
-          dispatch(fetchArticles(true, false, 0, true, page));
-          break;
-        case 12:
-          dispatch(fetchArticles(true, false, 12, true, page));
-          break;
-        case 9:
-          dispatch(fetchArticles(true, false, 9, true, page));
-          break;
-        case 2:
-          dispatch(fetchArticles(true, false, 2, true, page));
-          break;
-        default:
-          break;
-      }
+      dispatch(fetchArticles(false, false, typeId, true, page));
+      canLoadMore = false;
+      loadMoreTime = Date.parse(new Date()) / 1000;
     };
   }
 
@@ -166,11 +158,11 @@ class Main extends React.Component {
             <Text style={styles.title}>
               {article.title}
             </Text>
-            <View style={{flex: 1, flexDirection: 'row'}} >
+            <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}} >
               <Text style={{fontSize: 14, color: '#aaaaaa', marginTop: 5}}>
                 来自微信公众号：
               </Text>
-              <Text style={{fontSize: 14, color: '#87CEFA', marginTop: 5}}>
+              <Text style={{flex: 1, fontSize: 14, color: '#87CEFA', marginTop: 5, marginRight: 5}}>
                 {article.userName}
               </Text>
             </View>
@@ -185,22 +177,7 @@ class Main extends React.Component {
     if (read.loading) {
       return <LoadingView/>;
     }
-    let isEmpty = false;
-    switch (typeId) {
-      case 0:
-        isEmpty = read.hotList == undefined || read.hotList.length == 0;
-        break;
-      case 12:
-        isEmpty = read.zanList == undefined || read.zanList.length == 0;
-      case 9:
-        isEmpty = read.itList == undefined || read.itList.length == 0;
-        break;
-      case 2:
-        isEmpty = read.jokeList == undefined || read.jokeList.length == 0;
-        break;
-      default:
-        break;
-    }
+    let isEmpty = read.articleList[typeId] == undefined || read.articleList[typeId].length == 0;
     if (isEmpty) {
       return (
         <ScrollView
@@ -246,51 +223,110 @@ class Main extends React.Component {
     );
   }
 
+  renderNavigationView() {
+    return (
+      <View style={[styles.container, {backgroundColor: '#fcfcfc'}]}>
+        <Image
+          style={{width: Dimensions.get('window').width / 5 * 3, height: 120, justifyContent: 'flex-end', paddingBottom: 10}}
+          source={require('../img/drawerlayout.png')}
+        >
+          <Text style={{fontSize: 20, textAlign: 'left', color: '#fcfcfc', marginLeft: 10}}>
+            Reading
+          </Text>
+          <Text style={{fontSize: 20, textAlign: 'left', color: '#fcfcfc', marginLeft: 10}}>
+            让生活更精彩
+          </Text>
+        </Image>
+        <TouchableOpacity
+          style={styles.drawerContent}
+          onPress={this.onPressDrawerItem.bind(this, 0)}
+        >
+          <Image
+            style={styles.drawerIcon}
+            source={require('../img/home.png')}
+          />
+          <Text style={styles.drawerText}>
+            首页
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.drawerContent}
+          onPress={this.onPressDrawerItem.bind(this, 1)}
+        >
+          <Image
+            style={styles.drawerIcon}
+            source={require('../img/category.png')}
+          />
+          <Text style={styles.drawerText}>
+            分类
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.drawerContent}
+          onPress={this.onPressDrawerItem.bind(this, 2)}
+        >
+          <Image
+            style={styles.drawerIcon}
+            source={require('../img/inspection.png')}
+          />
+          <Text style={styles.drawerText}>
+            建议
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.drawerContent}
+          onPress={this.onPressDrawerItem.bind(this, 3)}
+        >
+          <Image
+            style={styles.drawerIcon}
+            source={require('../img/info.png')}
+          />
+          <Text style={styles.drawerText}>
+            关于
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   render() {
     const {read, navigator} = this.props;
-    let hotSource = this.state.dataSource.cloneWithRows(read.hotList);
-    let zanSource = this.state.dataSource.cloneWithRows(read.zanList);
-    let itSource = this.state.dataSource.cloneWithRows(read.itList);
-    let jokeSource = this.state.dataSource.cloneWithRows(read.jokeList);
-    return (
-      <View style={styles.container}>
-        <ReadingToolbar
-          title={'eading'}
-          navigator={navigator}
-        />
-        <ScrollableTabView
-          renderTabBar={() => <ReadingTabBar />}
-          tabBarBackgroundColor="#fcfcfc"
-          tabBarUnderlineColor="#3e9ce9"
-          tabBarActiveTextColor="#3e9ce9"
-          tabBarInactiveTextColor="#aaaaaa"
+    let hotSource, zanSource, itSource, jokeSource;
+    var lists = [];
+    typeIds.forEach((typeId) => {
+      lists.push(
+        <View
+          key={typeId}
+          tabLabel={categories[typeId]}
+          style={{flex: 1}}
         >
-          <View
-            tabLabel="热门"
-            style={{flex: 1}}
+          {this.renderContent(this.state.dataSource.cloneWithRows(read.articleList[typeId] == undefined ? [] : read.articleList[typeId]), typeId)}
+        </View>);
+    });
+    return (
+      <DrawerLayoutAndroid
+        ref='drawer'
+        drawerWidth={Dimensions.get('window').width / 5 * 3}
+        drawerPosition={DrawerLayoutAndroid.positions.Left}
+        renderNavigationView={this.renderNavigationView}
+      >
+        <View style={styles.container}>
+          <ReadingToolbar
+            title={'Reading'}
+            navigator={navigator}
+            onIconClicked={this.onIconClicked}
+          />
+          <ScrollableTabView
+            renderTabBar={() => <ReadingTabBar />}
+            tabBarBackgroundColor="#fcfcfc"
+            tabBarUnderlineColor="#3e9ce9"
+            tabBarActiveTextColor="#3e9ce9"
+            tabBarInactiveTextColor="#aaaaaa"
           >
-            {this.renderContent(hotSource, 0)}
-          </View>
-          <View
-            tabLabel="点赞"
-            style={{flex: 1}}
-          >
-            {this.renderContent(zanSource, 12)}
-          </View>
-          <View
-            tabLabel="科技"
-            style={{flex: 1}}
-          >
-            {this.renderContent(itSource, 9)}
-          </View>
-          <View
-            tabLabel="段子"
-            style={{flex: 1}}
-          >
-            {this.renderContent(jokeSource, 2)}
-          </View>
-        </ScrollableTabView>
-      </View>
+          {lists}
+          </ScrollableTabView>
+        </View>
+      </DrawerLayoutAndroid>
     );
   }
 }
@@ -324,6 +360,24 @@ let styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 100
+  },
+  drawerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd'
+  },
+  drawerIcon: {
+    width: 30,
+    height: 30,
+    marginLeft: 5
+  },
+  drawerText: {
+    fontSize: 18,
+    marginLeft: 15,
+    textAlign: 'center',
+    color: 'black'
   }
 })
 

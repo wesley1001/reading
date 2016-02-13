@@ -42,8 +42,8 @@
 -keep class * extends com.facebook.react.bridge.NativeModule { *; }
 -keepclassmembers,includedescriptorclasses class * { native <methods>; }
 -keepclassmembers class *  { @com.facebook.react.uimanager.UIProp <fields>; }
--keepclassmembers class *  { @com.facebook.react.uimanager.ReactProp <methods>; }
--keepclassmembers class *  { @com.facebook.react.uimanager.ReactPropGroup <methods>; }
+-keepclassmembers class *  { @com.facebook.react.uimanager.annotations.ReactProp <methods>; }
+-keepclassmembers class *  { @com.facebook.react.uimanager.annotations.ReactPropGroup <methods>; }
 
 -dontwarn com.facebook.react.**
 
@@ -66,6 +66,11 @@
 
 -dontwarn com.facebook.stetho.**
 
+-keep class com.facebook.imagepipeline.gif.** { *; }
+-keep class com.facebook.imagepipeline.webp.** { *; }
+
 -keep class com.tencent.mm.sdk.** {
    *;
 }
+
+-keep public class com.tencent.bugly.**{*;}
