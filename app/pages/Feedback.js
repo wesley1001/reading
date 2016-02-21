@@ -7,6 +7,7 @@ const {
 
 import ReadingToolbar from '../components/ReadingToolbar';
 import AV from 'avoscloud-sdk';
+import DeviceInfo from 'react-native-device-info';
 import {ToastShort} from '../utils/ToastUtils';
 
 let toolbarActions = [
@@ -31,6 +32,11 @@ class Feedback extends React.Component {
     } else {
       const {navigator} = this.props;
       var feedback = AV.Object.new('Feedback');
+      feedback.set('manufacturer', DeviceInfo.getManufacturer());
+      feedback.set('system', DeviceInfo.getSystemName());
+      feedback.set('deviceVersion', DeviceInfo.getSystemVersion());
+      feedback.set('deviceModel', DeviceInfo.getModel());
+      feedback.set('appVersion', DeviceInfo.getVersion());
       feedback.set('feedback', feedbackText);
       feedback.save();
       navigator.pop();
@@ -43,7 +49,7 @@ class Feedback extends React.Component {
     return (
       <View style={styles.container}>
         <ReadingToolbar
-          title={'建议'}
+          title="建议"
           actions={toolbarActions}
           onActionSelected={this.onActionSelected}
           navigator={navigator}
