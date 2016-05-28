@@ -1,38 +1,39 @@
 'use strict';
 
-import React from 'react-native';
-const {
+import React, {PropTypes} from 'react';
+import {
   StyleSheet,
   ListView,
   RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
-  PropTypes,
   InteractionManager,
   ProgressBarAndroid,
-  Image,
   DrawerLayoutAndroid,
+  Image,
   Dimensions,
+  Platform,
   View
-} = React;
+} from 'react-native';
 import LoadingView from '../components/LoadingView';
+import DrawerLayout from 'react-native-drawer-layout';
 import {fetchArticles} from '../actions/read';
 import ReadingTabBar from '../components/ReadingTabBar';
 import ReadingToolbar from '../components/ReadingToolbar';
 import ScrollableTabView from 'react-native-scrollable-tab-view';
-import WebViewContainer from '../containers/WebViewContainer';
-import AboutContainer from '../containers/AboutContainer';
-import FeedbackContainer from '../containers/FeedbackContainer';
+import About from '../pages/About';
+import Feedback from '../pages/Feedback';
 import CategoryContainer from '../containers/CategoryContainer';
 import {ToastShort} from '../utils/ToastUtils';
 import Storage from '../utils/Storage';
 import {CATEGORIES} from '../constants/Alias';
+import WebViewPage from '../pages/WebViewPage';
 
 const propTypes = {
   dispatch: PropTypes.func.isRequired,
   read: PropTypes.object.isRequired
-}
+};
 
 var canLoadMore;
 var _typeIds = new Array();
@@ -76,7 +77,7 @@ class Main extends React.Component {
     if (read.isLoadMore && !nextProps.read.isLoadMore && !nextProps.read.isRefreshing) {
       if (nextProps.read.noMore) {
         ToastShort('没有更多数据了');
-      };
+      }
     }
   }
 
@@ -90,7 +91,7 @@ class Main extends React.Component {
     const {navigator} = this.props;
     InteractionManager.runAfterInteractions(() => {
       navigator.push({
-        component: WebViewContainer,
+        component: WebViewPage,
         name: 'WebViewPage',
         article: article
       });
@@ -112,7 +113,7 @@ class Main extends React.Component {
       case 2:
         InteractionManager.runAfterInteractions(() => {
           navigator.push({
-            component: FeedbackContainer,
+            component: Feedback,
             name: 'Feedback'
           });
         });
@@ -120,7 +121,7 @@ class Main extends React.Component {
       case 3:
         InteractionManager.runAfterInteractions(() => {
           navigator.push({
-            component: AboutContainer,
+            component: About,
             name: 'About'
           });
         });
@@ -137,7 +138,7 @@ class Main extends React.Component {
   onScroll() {
     if (!canLoadMore) {
       canLoadMore = true;
-    };
+    }
   }
 
   onEndReached(typeId) {
@@ -148,7 +149,7 @@ class Main extends React.Component {
       dispatch(fetchArticles(false, false, typeId, true, page));
       canLoadMore = false;
       loadMoreTime = Date.parse(new Date()) / 1000;
-    };
+    }
   }
 
   renderFooter() {
@@ -196,7 +197,7 @@ class Main extends React.Component {
     if (read.loading) {
       return <LoadingView/>;
     }
-    let isEmpty = read.articleList[typeId] == undefined || read.articleList[typeId].length == 0;
+    let isEmpty = read.articleList[typeId] === undefined || read.articleList[typeId].length === 0;
     if (isEmpty) {
       return (
         <ScrollView
@@ -246,9 +247,8 @@ class Main extends React.Component {
   renderNavigationView() {
     return (
       <View style={[styles.container, {backgroundColor: '#fcfcfc'}]}>
-        <Image
-          style={{width: Dimensions.get('window').width / 5 * 3, height: 120, justifyContent: 'flex-end', paddingBottom: 10}}
-          source={require('../img/drawerlayout.png')}
+        <View
+          style={{width: Dimensions.get('window').width / 5 * 3, height: 120, justifyContent: 'flex-end', paddingBottom: 10, backgroundColor: '#3e9ce9'}}
         >
           <Text style={{fontSize: 20, textAlign: 'left', color: '#fcfcfc', marginLeft: 10}}>
             Reading
@@ -256,7 +256,7 @@ class Main extends React.Component {
           <Text style={{fontSize: 20, textAlign: 'left', color: '#fcfcfc', marginLeft: 10}}>
             让生活更精彩
           </Text>
-        </Image>
+        </View>
         <TouchableOpacity
           style={styles.drawerContent}
           onPress={this.onPressDrawerItem.bind(this, 0)}
@@ -319,14 +319,14 @@ class Main extends React.Component {
           tabLabel={CATEGORIES[typeId]}
           style={{flex: 1}}
         >
-          {this.renderContent(this.state.dataSource.cloneWithRows(read.articleList[typeId] == undefined ? [] : read.articleList[typeId]), typeId)}
+          {this.renderContent(this.state.dataSource.cloneWithRows(read.articleList[typeId] === undefined ? [] : read.articleList[typeId]), typeId)}
         </View>);
     });
     return (
-      <DrawerLayoutAndroid
+      <DrawerLayout
         ref='drawer'
         drawerWidth={Dimensions.get('window').width / 5 * 3}
-        drawerPosition={DrawerLayoutAndroid.positions.Left}
+        drawerPosition={Platform.OS === 'android' ? DrawerLayoutAndroid.positions.Left : 'left'}
         renderNavigationView={this.renderNavigationView}
       >
         <View style={styles.container}>
@@ -346,7 +346,7 @@ class Main extends React.Component {
           {lists}
           </ScrollableTabView>
         </View>
-      </DrawerLayoutAndroid>
+      </DrawerLayout>
     );
   }
 }
@@ -399,7 +399,7 @@ let styles = StyleSheet.create({
     textAlign: 'center',
     color: 'black'
   }
-})
+});
 
 Main.propTypes = propTypes;
 

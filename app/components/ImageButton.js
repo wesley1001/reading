@@ -1,25 +1,23 @@
 'use strict';
 
-import React from 'react-native';
-const {
+import React, {PropTypes} from 'react';
+import {
 	Image,
-	PropTypes,
-	TouchableOpacity,
-} = React;
-import StyleSheetPropType from 'StyleSheetPropType';
-import ViewStylePropTypes from 'ViewStylePropTypes';
-
-let stylePropType = StyleSheetPropType(ViewStylePropTypes);
+	TouchableOpacity
+} from 'react-native';
 
 const propTypes = {
 	onPress: PropTypes.func,
 	disabled: PropTypes.bool,
-	uri: PropTypes.string,
-	require: PropTypes.number,
-	isStatic: PropTypes.bool,
-	isUri: PropTypes.bool,
-	style: stylePropType,
-	containerStyle: stylePropType
+	source: PropTypes.oneOfType([
+		PropTypes.shape({
+			uri: PropTypes.string,
+		}),
+		// Opaque type returned by require('./image.jpg')
+		PropTypes.number,
+	]),
+	style: PropTypes.object,
+	containerStyle: PropTypes.object
 };
 
 class ImageButton extends React.Component {
@@ -37,17 +35,13 @@ class ImageButton extends React.Component {
 	}
 
 	render() {
-		var source = this.props.isUri ? {
-			uri: this.props.uri,
-			isStatic: this.props.isStatic
-		} : this.props.require;
 		return (
 			<TouchableOpacity
 				style={this.props.containerStyle}
 				onPress={this.onPress}>
 				<Image
- 	  		  style={this.props.style}
-		 		  source={source}
+				  style={this.props.style}
+				  source={this.props.source}
 				/>
 			</TouchableOpacity>
 		);
@@ -58,10 +52,7 @@ ImageButton.propTypes = propTypes;
 
 ImageButton.defaultProps = {
 	onPress: function() {},
-	disabled: false,
-	isStatic: false,
-	uri: '',
-	isUri: true
+	disabled: false
 };
 
 export default ImageButton;

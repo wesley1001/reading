@@ -6,7 +6,7 @@
 
 Reading App Write In React-Native（Studying and Programing）
 
-**Support: Android 4.1 (API 16)+    IOS(coming soon)**
+**Support: Android 4.1 (API 16)+    IOS(7.0+)**
 
 > No Profit, No Advertisement, Only Feelings
 
@@ -14,29 +14,21 @@ Reading App Write In React-Native（Studying and Programing）
 ![Reading_Splash](./screenshot/Reading_Splash.jpg) ![Reading_Main](./screenshot/Reading_Main.jpg)
 ![Reading_Drawer](./screenshot/Reading_Drawer.jpg) ![Reading_Article](./screenshot/Reading_Article.jpg)
 ![Reading_Share](./screenshot/Reading_Share.jpg) ![Reading_About](./screenshot/Reading_About.jpg)
+![Reading_IOS_Main](./screenshot/Reading_IOS_Main.jpeg) ![Reading_IOS_Share](./screenshot/Reading_IOS_Share.jpeg)
 
 ## Download From Android Market
 *From 360 Android Market:* [Download Reading](http://zhushou.360.cn/detail/index/soft_id/3217938?recrefer=SE_D_Reading)
 
 *From Wandou Labs:* [Download Reading](http://www.wandoujia.com/apps/com.reading)
 
-## Dependency
-```
-"dependencies": {
-    "avoscloud-sdk": "^1.0.0-rc5",
-    "immutable": "^3.7.5",
-    "react": "^0.14.8",
-    "react-native": "^0.23.0",
-    "react-native-code-push": "^1.7.3-beta",
-    "react-native-device-info": "^0.9.1",
-    "react-native-scrollable-tab-view": "^0.4.0",
-    "react-native-wechat": "^1.3.2",
-    "react-redux": "^4.4.1",
-    "redux": "^3.3.1",
-    "redux-thunk": "^2.0.1"
-  }
-```
-## How To Build And Run
+## Application Architecture
+
+* [Microsoft Code Push](https://github.com/Microsoft/react-native-code-push) for dynamic update
+* [Redux](https://github.com/reactjs/redux) is a predictable state container for reading app, together with [React Native](https://github.com/facebook/react-native)
+* [Mocha](https://mochajs.org/) for UT
+* [Enzyme](https://github.com/airbnb/enzyme) for testing UI components and mock
+
+## Development Workflow
 ### Step One
 ```
 npm install -g react-native-cli
@@ -49,10 +41,13 @@ npm install
 ```
 react-native start
 ```
-### Optional Step
+### Run Test
 ```
-npm run setup
+npm test
 ```
+
+## Importance
+[Why unknow module "http"](https://github.com/attentiveness/reading/issues/4)
 
 ## Release Note
 [Reading Release Note](https://github.com/attentiveness/reading/releases)

@@ -1,9 +1,11 @@
-import React from 'react-native';
-const {
+'use strict';
+
+import React from 'react';
+import {
   StyleSheet,
   TextInput,
   View
-} = React;
+} from 'react-native';
 
 import ReadingToolbar from '../components/ReadingToolbar';
 import AV from 'avoscloud-sdk';
@@ -28,7 +30,7 @@ class Feedback extends React.Component {
 
   onActionSelected() {
     if (feedbackText === '') {
-      ToastShort('建议内容为空！')
+      ToastShort('建议内容为空！');
     } else {
       const {navigator} = this.props;
       var feedback = AV.Object.new('Feedback');
@@ -62,7 +64,9 @@ class Feedback extends React.Component {
           numberOfLines={200}
           multiline={true}
           autoFocus={true}
-          onChangeText={(text) => {feedbackText = text}}
+          onChangeText={(text) => {
+            feedbackText = text;
+          }}
         />
       </View>
     );

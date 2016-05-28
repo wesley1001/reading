@@ -1,23 +1,16 @@
 'use strict';
 
-import React from 'react-native';
-const {
+import React, {PropTypes} from 'react';
+import {
 	Text,
-	PropTypes,
-	TouchableOpacity,
-} = React;
-import StyleSheetPropType from 'StyleSheetPropType';
-import ViewStylePropTypes from 'ViewStylePropTypes';
-import TextStylePropTypes from 'TextStylePropTypes';
-
-let ViewStylePropType = StyleSheetPropType(ViewStylePropTypes);
-let TextStylePropType = StyleSheetPropType(TextStylePropTypes);
+	TouchableOpacity
+} from 'react-native';
 
 const propTypes = {
 	onPress: PropTypes.func,
 	disabled: PropTypes.bool,
-	style: TextStylePropType,
-	containerStyle: ViewStylePropType,
+	style: PropTypes.object,
+	containerStyle: PropTypes.object,
 	text: PropTypes.string
 };
 

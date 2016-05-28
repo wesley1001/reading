@@ -1,12 +1,11 @@
 'use strict';
 
-import React from 'react-native';
-const {
+import React, {PropTypes} from 'react';
+import {
   View,
   StyleSheet,
-  ListView,
-  PropTypes
-} = React;
+  ListView
+} from 'react-native';
 
 const propTypes = {
 	items: PropTypes.array,

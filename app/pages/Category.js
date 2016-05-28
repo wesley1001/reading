@@ -1,12 +1,14 @@
-import React from 'react-native';
-const {
+'use strict';
+
+import React, {PropTypes} from 'react';
+import {
   InteractionManager,
   StyleSheet,
   Text,
   Alert,
   BackAndroid,
   View
-} = React;
+} from 'react-native';
 
 import ReadingToolbar from '../components/ReadingToolbar';
 import {fetchTypes} from '../actions/category';
@@ -21,6 +23,11 @@ let toolbarActions = [
   {title: '提交', icon: require('../img/check.png'), show: 'always'}
 ];
 var _typeIds = new Array();
+
+const propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  category: PropTypes.object.isRequired
+};
 
 class Category extends React.Component {
   constructor(props) {
@@ -50,7 +57,7 @@ class Category extends React.Component {
 
   onPress(type) {
     let pos = _typeIds.indexOf(parseInt(type.id));
-    if (pos == -1) {
+    if (pos === -1) {
       _typeIds.push(parseInt(type.id));
     } else {
       _typeIds.splice(pos, 1);
@@ -81,7 +88,7 @@ class Category extends React.Component {
     InteractionManager.runAfterInteractions(() => {
       Storage.get('typeIds')
         .then((typeIds) => {
-          if (typeIds.sort().toString() == Array.from(_typeIds).sort().toString()) {
+          if (typeIds.sort().toString() === Array.from(_typeIds).sort().toString()) {
             navigator.pop();
             return;
           }
@@ -98,21 +105,21 @@ class Category extends React.Component {
                 BackAndroid.exitApp();
               }
             }]
-          )
+          );
         });
     });
   }
 
   renderItem(item) {
-    let isSelect = Array.from(this.state.typeIds).indexOf(parseInt(item.id)) != -1;
+    let isSelect = Array.from(this.state.typeIds).indexOf(parseInt(item.id)) !== -1;
     return (
       <Button
         key={item.id}
         containerStyle={[{margin: 10, padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#dddddd'}, isSelect ? {backgroundColor: '#3e9ce9'} : {backgroundColor: '#fcfcfc'}]}
         style={[{fontSize: 16, textAlign: 'center'}, isSelect ? {color: '#fcfcfc'} : {color: 'black'}]}
         text={CATEGORIES[item.id]}
-        onPress={this.onPress.bind(this, item)}>
-      </Button>
+        onPress={this.onPress.bind(this, item)}
+      />
     );
   }
 
@@ -149,5 +156,7 @@ let styles = StyleSheet.create({
     flexDirection: 'column'
   }
 });
+
+Category.propTypes = propTypes;
 
 export default Category;
